@@ -12,31 +12,30 @@ class MainClassAsGUI(Qtw.QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle('FHP Tunnel')
-        self.setSizePolicy(Qtw.QSizePolicy.Fixed, Qtw.QSizePolicy.Fixed)
 
         # FHP Model
         self.model = fhp_main.FHP_Model()
         self.time_steps = 300
         self.index = 0
 
-        # MENU
+        # WIDGETS
         self.canvas = gui_canvas.QCanvas(self.model.get_array())
-        self.canvas.setSizePolicy(Qtw.QSizePolicy.Expanding, Qtw.QSizePolicy.Expanding)
-
         self.button = Qtw.QPushButton('Start Simulation')
-        self.button.setSizePolicy(Qtw.QSizePolicy.Expanding, Qtw.QSizePolicy.Fixed)
         self.button.clicked.connect(self.do_sim)
 
+        # LAYOUT
         layout = Qtw.QGridLayout()
-        layout.addWidget(self.canvas,0,0)
-        layout.addWidget(self.button,1,0)
+        layout.setAlignment(Qtc.Qt.AlignTop)
+        layout.addWidget(self.canvas, 0, 0)
+        layout.addWidget(self.button, 1, 0)
         self.setLayout(layout)
 
+        # THREAD
         self.thread = gui_thread.QThreadStep()
         self.model.time_step.connect(self.canvas.set_array)
         self.thread.threadFinished.connect(self.do_step)
 
-        print(layout.sizeHint())
+        # SHOW
         self.show()
 
     @Qtc.pyqtSlot()

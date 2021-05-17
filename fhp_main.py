@@ -128,14 +128,29 @@ class FHP_Model(Qtc.QObject):
                         self.field[:6,c[0],c[1]] = self.vectors[particles][choice]
                         break
 
+    def __get_flow_dir(self, dir='v'):
+        if dir == 'h':
+            array = 0.5*self.field[0, :, :] + self.field[1, :, :] + 0.5*self.field[2, :, :] - \
+                    0.5*self.field[3, :, :] - self.field[4, :, :] - 0.5*self.field[5, :, :]
+        if dir == 'v':
+            angle = np.sin(np.pi/3)
+            array = angle*self.field[0, :, :] - angle*self.field[2, :, :] - \
+                    angle*self.field[3, :, :] + angle*self.field[5, :, :]
+        return array
+
+    def __get_sum(self):
+        return np.sum(self.field[:6, :, :], axis=0)
+
+    def get_array(self):
+        array = self.__get_flow_dir()
+        # array = self.get_sum()
+        return array
+
     def do_step(self):
         self.__flux()
         self.__scatter()
-        array = np.sum(self.field[:6, :, :], axis=0)
+        array = self.get_array()
         self.time_step.emit(array)
-
-    def get_array(self):
-        return np.sum(self.field[:6, :, :], axis=0)
 
     def run(self, t_steps=100):
         for t in range(t_steps):
@@ -144,4 +159,9 @@ class FHP_Model(Qtc.QObject):
 
 if __name__ == "__main__":
     model = FHP_Model(250, 750)
-    model.run()
+    for t in range(100):
+        model.do_step()
+        print(t+1)
+    array = model.get_array()
+    plt.imshow(array)
+    plt.show()
