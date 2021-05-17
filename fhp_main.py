@@ -134,6 +134,9 @@ class FHP_Model(Qtc.QObject):
         array = np.sum(self.field[:6, :, :], axis=0)
         self.time_step.emit(array)
 
+    def get_array(self):
+        return np.sum(self.field[:6, :, :], axis=0)
+
     def run(self, t_steps=100):
         for t in range(t_steps):
             self.do_step()

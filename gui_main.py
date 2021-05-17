@@ -4,6 +4,7 @@ import fhp_main
 import gui_canvas
 import gui_thread
 
+
 class MainClassAsGUI(Qtw.QWidget):
 
     STANDARD_MESSAGE = 'You can now set up your model and calculate'
@@ -11,27 +12,31 @@ class MainClassAsGUI(Qtw.QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle('FHP Tunnel')
+        self.setSizePolicy(Qtw.QSizePolicy.Fixed, Qtw.QSizePolicy.Fixed)
 
+        # FHP Model
         self.model = fhp_main.FHP_Model()
+        self.time_steps = 300
+        self.index = 0
+
         # MENU
-        self.canvas = gui_canvas.QCanvas()
-        #self.canvas.setSizePolicy(Qtw.QSizePolicy.Fixed, Qtw.QSizePolicy.Fixed)
-        self.menu = Qtw.QFrame()
-        self.menu.setSizePolicy(Qtw.QSizePolicy.Fixed, Qtw.QSizePolicy.Expanding)
+        self.canvas = gui_canvas.QCanvas(self.model.get_array())
+        self.canvas.setSizePolicy(Qtw.QSizePolicy.Expanding, Qtw.QSizePolicy.Expanding)
+
         self.button = Qtw.QPushButton('Start Simulation')
+        self.button.setSizePolicy(Qtw.QSizePolicy.Expanding, Qtw.QSizePolicy.Fixed)
         self.button.clicked.connect(self.do_sim)
 
-        layout = Qtw.QVBoxLayout()
-        layout.addWidget(self.canvas)
-        layout.addWidget(self.button)
+        layout = Qtw.QGridLayout()
+        layout.addWidget(self.canvas,0,0)
+        layout.addWidget(self.button,1,0)
         self.setLayout(layout)
 
         self.thread = gui_thread.QThreadStep()
         self.model.time_step.connect(self.canvas.set_array)
         self.thread.threadFinished.connect(self.do_step)
 
-        self.time_steps = 300
-        self.index = 0
+        print(layout.sizeHint())
         self.show()
 
     @Qtc.pyqtSlot()
