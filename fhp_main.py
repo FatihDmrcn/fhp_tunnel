@@ -5,9 +5,12 @@
 import numpy as np
 from numpy.random import default_rng
 import matplotlib.pyplot as plt
+import PyQt5.QtCore as Qtc
 
 
-class FHP_Model():
+class FHP_Model(Qtc.QObject):
+
+    time_step = Qtc.pyqtSignal(np.ndarray)
 
     vectors = {'4':[np.array([1,1,0,1,1,0]),
                     np.array([1,0,1,1,0,1]),
@@ -19,13 +22,14 @@ class FHP_Model():
                     np.array([0,0,1,0,0,1])]}
 
     def __init__(self, height=250, width=750, randomized=True):
+        super().__init__()
         self.__h = height
         self.__w = width
         self.__field_randomized = randomized
         self.__coordinates = []
         self.field = self.__init_field()
         if self.__field_randomized:
-            #self.__randomize_field()
+            self.__randomize_field()
             self.__field_square()
 
     def __init_field(self):
@@ -97,7 +101,7 @@ class FHP_Model():
         # Influx condition
         for c in self.__coordinates:
             if c[1]<4:
-                # field_t1[:3,c[0],c[1]] = np.array([1,1,1], dtype=np.long)
+                # field_t1[:3,c[0],c[1]] = np.time_step([1,1,1], dtype=np.long)
                 field_t1[:6,c[0],c[1]] = np.array([1, 1, 1, 0, 0, 0], dtype=np.long)
 
         # Clean nodes from particles if nodes are walls
@@ -106,38 +110,35 @@ class FHP_Model():
                 d = np.zeros((1,6))
                 d = d.astype(np.long)
                 field_t1[:6,c[0],c[1]] = d
-        return field_t1
+        self.field = field_t1
 
     def __scatter(self):
-        field_t1 = self.field
         rng = default_rng()
         for c in self.__coordinates:
-            initial_vector = field_t1[:6,c[0],c[1]]
+            initial_vector = self.field[:6,c[0],c[1]]
             particles = str(sum(initial_vector))
             if particles in ('2', '3', '4'):
                 for i, v in enumerate(self.vectors[particles],0):
                     if all(v == initial_vector):
-                        # v_array = copy.deepcopy(vectors[particles])
                         # Create a list of all possible indices
-                        v_array = list(range(len(self.vectors[particles])))
+                        choice_list = list(range(len(self.vectors[particles])))
                         # Delete the index number which is the current vector
-                        # del v_array[i]
-                        v_array.remove(i)
-                        #choice = rng.integers(low=0, high=len(v_array))
-                        choice = rng.choice(v_array)
-                        field_t1[:6,c[0],c[1]] = self.vectors[particles][choice]
+                        choice_list.remove(i)
+                        choice = rng.choice(choice_list)
+                        self.field[:6,c[0],c[1]] = self.vectors[particles][choice]
                         break
-        return field_t1
+
+    def do_step(self):
+        self.__flux()
+        self.__scatter()
+        array = np.sum(self.field[:6, :, :], axis=0)
+        self.time_step.emit(array)
 
     def run(self, t_steps=100):
         for t in range(t_steps):
-            self.field = self.__flux()
-            self.field = self.__scatter()
-            print(t+1)
-        a = np.sum(self.field[:6, :, :], axis=0)
-        plt.imshow(a)
-        plt.show()
+            self.do_step()
 
 
-model = FHP_Model(250, 750)
-model.run()
+if __name__ == "__main__":
+    model = FHP_Model(250, 750)
+    model.run()
