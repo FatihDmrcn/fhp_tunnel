@@ -2,7 +2,7 @@ import PyQt5.QtWidgets as Qtw
 import PyQt5.QtCore as Qtc
 
 
-class ControlWidget(Qtw.QWidget):
+class QControlPanel(Qtw.QWidget):
 
     def __init__(self):
         super().__init__()
@@ -62,7 +62,7 @@ class ControlWidget(Qtw.QWidget):
 
 if __name__ == "__main__":
     app = Qtw.QApplication([])
-    gui = ControlWidget()
+    gui = QControlPanel()
     gui.show()
     app.exec_()
 

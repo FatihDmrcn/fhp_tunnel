@@ -3,6 +3,7 @@ import PyQt5.QtCore as Qtc
 
 from gui_canvas import QCanvas
 from gui_thread import QThreadStep
+from gui_control import QControlPanel
 from fhp import FHP_Model
 from airfoil import Airfoil
 
@@ -29,12 +30,14 @@ class MainClassAsGUI(Qtw.QWidget):
         self.button = Qtw.QPushButton('Start Simulation')
         self.button.setSizePolicy(Qtw.QSizePolicy.MinimumExpanding, Qtw.QSizePolicy.Fixed)
         self.button.clicked.connect(self.do_sim)
+        self.control = QControlPanel()
 
         # LAYOUT
         layout = Qtw.QGridLayout()
         layout.setAlignment(Qtc.Qt.AlignTop)
-        layout.addWidget(self.canvas, 0, 0)
-        layout.addWidget(self.button, 1, 0)
+        layout.addWidget(self.canvas, 0, 0, 1, 1)
+        layout.addWidget(self.button, 1, 0, 1, 1)
+        layout.addWidget(self.control, 0, 1, 2, 1)
         self.setLayout(layout)
 
         # THREAD
