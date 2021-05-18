@@ -1,9 +1,8 @@
 import PyQt5.QtWidgets as Qtw
 import PyQt5.QtCore as Qtc
 
-import gui_canvas
-import gui_thread
-
+from gui_canvas import QCanvas
+from gui_thread import QThreadStep
 from fhp import FHP_Model
 from airfoil import Airfoil
 
@@ -26,7 +25,7 @@ class MainClassAsGUI(Qtw.QWidget):
         self.model.insert_object(self.airfoil.getAirfoil())
 
         # WIDGETS
-        self.canvas = gui_canvas.QCanvas(self.model.get_array())
+        self.canvas = QCanvas(self.model.get_array())
         self.button = Qtw.QPushButton('Start Simulation')
         self.button.setSizePolicy(Qtw.QSizePolicy.MinimumExpanding, Qtw.QSizePolicy.Fixed)
         self.button.clicked.connect(self.do_sim)
@@ -39,7 +38,7 @@ class MainClassAsGUI(Qtw.QWidget):
         self.setLayout(layout)
 
         # THREAD
-        self.thread = gui_thread.QThreadStep()
+        self.thread = QThreadStep()
         self.model.time_step.connect(self.canvas.set_array)
         self.thread.threadFinished.connect(self.do_step)
 
