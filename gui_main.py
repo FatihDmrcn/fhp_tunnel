@@ -1,8 +1,11 @@
 import PyQt5.QtWidgets as Qtw
 import PyQt5.QtCore as Qtc
-import fhp_main
+
 import gui_canvas
 import gui_thread
+
+from fhp import FHP_Model
+from airfoil import Airfoil
 
 
 class MainClassAsGUI(Qtw.QWidget):
@@ -14,13 +17,18 @@ class MainClassAsGUI(Qtw.QWidget):
         self.setWindowTitle('FHP Tunnel')
 
         # FHP Model
-        self.model = fhp_main.FHP_Model()
+        self.model = FHP_Model()
         self.time_steps = 300
         self.index = 0
+
+        # Airfoil
+        self.airfoil = Airfoil()
+        self.model.insert_object(self.airfoil.getAirfoil())
 
         # WIDGETS
         self.canvas = gui_canvas.QCanvas(self.model.get_array())
         self.button = Qtw.QPushButton('Start Simulation')
+        self.button.setSizePolicy(Qtw.QSizePolicy.MinimumExpanding, Qtw.QSizePolicy.Fixed)
         self.button.clicked.connect(self.do_sim)
 
         # LAYOUT

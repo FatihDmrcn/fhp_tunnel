@@ -21,7 +21,7 @@ class FHP_Model(Qtc.QObject):
                     np.array([0,1,0,0,1,0]),
                     np.array([0,0,1,0,0,1])]}
 
-    def __init__(self, height=250, width=750, randomized=True):
+    def __init__(self, height=280, width=840, randomized=True):
         super().__init__()
         self.__h = height
         self.__w = width
@@ -30,13 +30,13 @@ class FHP_Model(Qtc.QObject):
         self.field = self.__init_field()
         if self.__field_randomized:
             self.__randomize_field()
-            self.__field_square()
+            # self.__field_square()
 
     def __init_field(self):
         field = np.zeros((8, self.__h, self.__w), dtype=np.long)
         # Apply upper and lower wall
-        field[6,:3,:]=1
-        field[6,-3:,:]=1
+        field[6,:4,:]=1
+        field[6,-4:,:]=1
         # List of __coordinates at which to find the nodes
         for i in range(int(self.__h / 2)):
             for j in range(self.__w):
@@ -104,13 +104,10 @@ class FHP_Model(Qtc.QObject):
                 # field_t1[:3,c[0],c[1]] = np.time_step([1,1,1], dtype=np.long)
                 field_t1[:6,c[0],c[1]] = np.array([1, 1, 1, 0, 0, 0], dtype=np.long)
 
-        # Clean nodes from particles if nodes are walls
-        for c in self.__coordinates:
-            if field_t1[6,c[0],c[1]] == 1:
-                d = np.zeros((1,6))
-                d = d.astype(np.long)
-                field_t1[:6,c[0],c[1]] = d
+        # Reassign new field
         self.field = field_t1
+        # Clean nodes from particles if nodes are walls
+        self.__clean_walls()
 
     def __scatter(self):
         rng = default_rng()
@@ -128,7 +125,25 @@ class FHP_Model(Qtc.QObject):
                         self.field[:6,c[0],c[1]] = self.vectors[particles][choice]
                         break
 
-    def __get_flow_dir(self, dir='v'):
+    def __clean_walls(self):
+        for c in self.__coordinates:
+            if self.field[6, c[0], c[1]] == 1:
+                d = np.zeros((1, 6))
+                d = d.astype(np.long)
+                self.field[:6, c[0], c[1]] = d
+
+    def insert_object(self, arr):
+        # Clean existing objects by setting walls to Zero
+        self.field[6,4:-4,:] = 0
+        h, w = arr.shape[0], arr.shape[1]
+        x0, y0 = int((self.__w-w)/2), int((self.__h-h)/2)
+        self.field[6, y0:(y0+h), x0:(x0+w)] = arr
+        # Clean walls from particles
+        self.__clean_walls()
+        # Re-Randomize Field
+        self.__randomize_field()
+
+    def __get_flow_dir(self, dir='h'):
         if dir == 'h':
             array = 0.5*self.field[0, :, :] + self.field[1, :, :] + 0.5*self.field[2, :, :] - \
                     0.5*self.field[3, :, :] - self.field[4, :, :] - 0.5*self.field[5, :, :]
@@ -143,7 +158,11 @@ class FHP_Model(Qtc.QObject):
 
     def get_array(self):
         array = self.__get_flow_dir()
-        # array = self.get_sum()
+        #array = self.__get_sum()
+        for i in range(int(self.__h/4)):
+            for j in range(int(self.__w/4)):
+                x, y = j*4, i*4
+                array[y:(y+4), x:(x+4)] = np.mean(array[y:(y+4), x:(x+4)])*np.ones((4, 4), dtype=np.long)
         return array
 
     def do_step(self):
