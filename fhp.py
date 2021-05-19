@@ -151,13 +151,11 @@ class FHP_Model(Qtc.QObject):
 
     @Qtc.pyqtSlot(np.ndarray)
     def insert_object(self, arr):
-        # Clean existing objects by setting walls to Zero
-        self.field[6,4:-4,:] = 0
+        # Clean existing objects and field by setting field to Zero
+        self.field[:7, 4:-4, :] = 0
         h, w = arr.shape[0], arr.shape[1]
         x0, y0 = int((self.__w-w)/2), int((self.__h-h)/2)
         self.field[6, y0:(y0+h), x0:(x0+w)] = arr
-        # Clean walls from particles
-        self.__clean_walls()
         # Re-Randomize Field
         self.__set_field()
         arr = self.get_array()
