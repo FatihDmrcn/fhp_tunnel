@@ -9,6 +9,8 @@ class QControlPanel(Qtw.QWidget):
     def __init__(self):
         super().__init__()
 
+        self.setSizePolicy(Qtw.QSizePolicy.Fixed, Qtw.QSizePolicy.Fixed)
+
         # WIDGETS
         # Main control buttons
         self.button_run_pause = Qtw.QPushButton('Run')

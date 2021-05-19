@@ -28,8 +28,6 @@ class MainClassAsGUI(Qtw.QWidget):
         # WIDGETS
         self.canvas = QCanvas(self.model.get_array())
         self.control = QControlPanel()
-        self.control.setSizePolicy(Qtw.QSizePolicy.Fixed, Qtw.QSizePolicy.Fixed)
-        self.control.button_run_pause.clicked.connect(self.run_pause)
 
         # LAYOUT
         layout = Qtw.QGridLayout()
@@ -43,6 +41,8 @@ class MainClassAsGUI(Qtw.QWidget):
         self.model.time_step.connect(self.canvas.set_array)
         self.thread.threadFinished.connect(self.do_step)
         self.control.toggle.connect(self.model.setDisplayType)
+        self.control.button_run_pause.clicked.connect(self.run_pause)
+        self.control.button_reset.clicked.connect(self.reset)
 
         # SHOW
         self.show()
@@ -53,12 +53,25 @@ class MainClassAsGUI(Qtw.QWidget):
             self.calculated_time_steps += 1
             self.thread.start()
 
+    def reset(self):
+        self.running = False
+        self.calculated_time_steps = 0
+        self.model.setState(self.running)
+        self.control.button_run_pause.setText('Run')
+        self.control.frame_airfoil.setEnabled(True)
+        # In addition reset to default airfoil and default field
+
     def run_pause(self):
         self.running = not self.running
         self.model.setState(self.running)
         if self.running:
+            self.control.button_run_pause.setText('Pause')
+            self.control.frame_airfoil.setDisabled(True)
             self.thread.set_model(self.model)
             self.do_step()
+        if not self.running:
+            self.control.button_run_pause.setText('Run')
+            self.control.frame_airfoil.setEnabled(True)
 
 
 if __name__ == "__main__":
