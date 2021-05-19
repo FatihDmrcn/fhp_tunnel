@@ -10,7 +10,7 @@ import PyQt5.QtCore as Qtc
 
 class FHP_Model(Qtc.QObject):
 
-    time_step = Qtc.pyqtSignal(np.ndarray)
+    field_emit = Qtc.pyqtSignal(np.ndarray)
 
     vectors = {'4':[np.array([1,1,0,1,1,0]),
                     np.array([1,0,1,1,0,1]),
@@ -26,13 +26,12 @@ class FHP_Model(Qtc.QObject):
         self.__h = height
         self.__w = width
         self.__field_randomized = randomized
-        self.__display_as = 'Density'
+        self.__display_as = 'Horizontal'
         self.__running = False
         self.__coordinates = []
         self.field = self.__init_field()
-        if self.__field_randomized:
-            self.__randomize_field()
-            # self.__field_square()
+        self.__set_field()
+        # self.__field_square()
 
     def __init_field(self):
         field = np.zeros((8, self.__h, self.__w), dtype=np.long)
@@ -52,13 +51,16 @@ class FHP_Model(Qtc.QObject):
                         self.__coordinates.append((2 * i, j))
         return field
 
-    def __randomize_field(self):
-        rng = default_rng()
-        for c in self.__coordinates:
-            if self.field[6, c[0], c[1]] != 1:
-                d = rng.integers(low=0, high=2, size=6)
-                d = d.astype(np.long)
-                self.field[:6, c[0], c[1]] = d
+    def __set_field(self):
+        if self.__field_randomized:
+            rng = default_rng()
+            for c in self.__coordinates:
+                if self.field[6, c[0], c[1]] != 1:
+                    d = rng.integers(low=0, high=2, size=6)
+                    d = d.astype(np.long)
+                    self.field[:6, c[0], c[1]] = d
+        else:
+            pass
 
     def __field_square(self):
         square = [c for c in self.__coordinates if 100<c[0]<150 and 300<c[1]<350]
@@ -147,6 +149,7 @@ class FHP_Model(Qtc.QObject):
     def __get_density(self):
         return np.sum(self.field[:6, :, :], axis=0)
 
+    @Qtc.pyqtSlot(np.ndarray)
     def insert_object(self, arr):
         # Clean existing objects by setting walls to Zero
         self.field[6,4:-4,:] = 0
@@ -156,7 +159,9 @@ class FHP_Model(Qtc.QObject):
         # Clean walls from particles
         self.__clean_walls()
         # Re-Randomize Field
-        self.__randomize_field()
+        self.__set_field()
+        arr = self.get_array()
+        self.field_emit.emit(arr)
 
     def setState(self, state):
         self.__running = state
@@ -165,24 +170,24 @@ class FHP_Model(Qtc.QObject):
     def setDisplayType(self, display_as):
         self.__display_as = display_as
         if not self.__running:
-            array = self.get_array()
-            self.time_step.emit(array)
+            arr = self.get_array()
+            self.field_emit.emit(arr)
 
     def get_array(self):
-        if self.__display_as == 'Horizontal': array = self.__get_flow_dir(dir='h')
-        if self.__display_as == 'Vertical': array = self.__get_flow_dir(dir='v')
-        if self.__display_as == 'Density': array = self.__get_density()
+        if self.__display_as == 'Horizontal': arr = self.__get_flow_dir(dir='h')
+        if self.__display_as == 'Vertical': arr = self.__get_flow_dir(dir='v')
+        if self.__display_as == 'Density': arr = self.__get_density()
         for i in range(int(self.__h/4)):
             for j in range(int(self.__w/4)):
                 x, y = j*4, i*4
-                array[y:(y+4), x:(x+4)] = np.mean(array[y:(y+4), x:(x+4)])*np.ones((4, 4), dtype=np.long)
-        return array
+                arr[y:(y + 4), x:(x + 4)] = np.mean(arr[y:(y + 4), x:(x + 4)]) * np.ones((4, 4), dtype=np.long)
+        return arr
 
     def do_step(self):
         self.__flux()
         self.__scatter()
-        array = self.get_array()
-        self.time_step.emit(array)
+        arr = self.get_array()
+        self.field_emit.emit(arr)
 
     def run(self, t_steps=100):
         for t in range(t_steps):

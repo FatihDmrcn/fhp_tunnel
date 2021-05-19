@@ -38,11 +38,14 @@ class MainClassAsGUI(Qtw.QWidget):
 
         # THREAD
         self.thread = QThreadStep()
-        self.model.time_step.connect(self.canvas.set_array)
+
         self.thread.threadFinished.connect(self.do_step)
-        self.control.toggle.connect(self.model.setDisplayType)
         self.control.button_run_pause.clicked.connect(self.run_pause)
         self.control.button_reset.clicked.connect(self.reset)
+        self.control.toggle.connect(self.model.setDisplayType)
+        self.model.field_emit.connect(self.canvas.set_array)
+        self.airfoil.naca.connect(self.model.insert_object)
+        self.control.spinbox.connect(self.airfoil.reset_params)
 
         # SHOW
         self.show()

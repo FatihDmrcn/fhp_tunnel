@@ -1,9 +1,14 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import PyQt5.QtCore as Qtc
 
 
-class Airfoil:
+class Airfoil(Qtc.QObject):
+
+    naca = Qtc.pyqtSignal(np.ndarray)
+
     def __init__(self, m=2, p=4, xx=12, pts=200):
+        super().__init__()
         self.pts = pts
         self.x = 1 / pts
         self.m = m / 100
@@ -12,14 +17,6 @@ class Airfoil:
         self.xcgt = np.zeros((self.pts, 4))          # Contains x-Value, Camber, Gradient and Thickness
         self.upper_srf = np.zeros((self.pts, 2))     # Contains coordinates for upper surface
         self.lower_srf = np.zeros((self.pts, 2))     # Contains coordinates for lower surface
-        self.calculate_airfoil()
-
-    def reset_params(self, m=2, p=4, xx=12, pts=200):
-        self.pts = pts
-        self.x = 1 / pts
-        self.m = m / 100
-        self.p = p / 10
-        self.xx = xx / 100
         self.calculate_airfoil()
 
     def __calculate_xcgt(self):
@@ -96,6 +93,27 @@ class Airfoil:
                 if self.lower_srf[j][1] <= y_val <= self.upper_srf[j][1]:
                     airfoil[i][j] = 1
         return airfoil
+
+    @Qtc.pyqtSlot(str)
+    def reset_params(self, string):
+        values = string.split(sep='_')
+        # print(values)
+        # Reassign values
+        self.pts = int(values[3])
+        self.x = 1. / int(values[3])
+        self.m = int(values[0]) / 100.
+        self.p = int(values[1]) / 10.
+        self.xx = int(values[2]) / 100.
+
+        # Clean arrays
+        self.xcgt = np.zeros((self.pts, 4))          # Contains x-Value, Camber, Gradient and Thickness
+        self.upper_srf = np.zeros((self.pts, 2))     # Contains coordinates for upper surface
+        self.lower_srf = np.zeros((self.pts, 2))     # Contains coordinates for lower surface
+
+        # Calculate new Airfoil and emit
+        self.calculate_airfoil()
+        naca = self.getAirfoil()
+        self.naca.emit(naca)
 
 
 if __name__ == '__main__':
