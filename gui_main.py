@@ -18,8 +18,8 @@ class MainClassAsGUI(Qtw.QWidget):
 
         # FHP Model
         self.model = FHP_Model()
-        self.time_steps = 300
-        self.index = 0
+        self.calculated_time_steps = 0
+        self.running = False
 
         # Airfoil
         self.airfoil = Airfoil()
@@ -27,37 +27,38 @@ class MainClassAsGUI(Qtw.QWidget):
 
         # WIDGETS
         self.canvas = QCanvas(self.model.get_array())
-        self.button = Qtw.QPushButton('Start Simulation')
-        self.button.setSizePolicy(Qtw.QSizePolicy.MinimumExpanding, Qtw.QSizePolicy.Fixed)
-        self.button.clicked.connect(self.do_sim)
         self.control = QControlPanel()
+        self.control.setSizePolicy(Qtw.QSizePolicy.Fixed, Qtw.QSizePolicy.Fixed)
+        self.control.button_run_pause.clicked.connect(self.run_pause)
 
         # LAYOUT
         layout = Qtw.QGridLayout()
         layout.setAlignment(Qtc.Qt.AlignTop)
-        layout.addWidget(self.canvas, 0, 0, 1, 1)
-        layout.addWidget(self.button, 1, 0, 1, 1)
-        layout.addWidget(self.control, 0, 1, 2, 1)
+        layout.addWidget(self.canvas, 0, 0)
+        layout.addWidget(self.control, 0, 1)
         self.setLayout(layout)
 
         # THREAD
         self.thread = QThreadStep()
         self.model.time_step.connect(self.canvas.set_array)
         self.thread.threadFinished.connect(self.do_step)
+        self.control.toggle.connect(self.model.setDisplayType)
 
         # SHOW
         self.show()
 
     @Qtc.pyqtSlot()
     def do_step(self):
-        if self.index<self.time_steps:
-            self.index += 1
+        if self.running:
+            self.calculated_time_steps += 1
             self.thread.start()
 
-    def do_sim(self):
-        self.thread.set_model(self.model)
-        self.index = 0
-        self.do_step()
+    def run_pause(self):
+        self.running = not self.running
+        self.model.setState(self.running)
+        if self.running:
+            self.thread.set_model(self.model)
+            self.do_step()
 
 
 if __name__ == "__main__":

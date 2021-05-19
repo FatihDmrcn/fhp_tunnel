@@ -4,6 +4,8 @@ import PyQt5.QtCore as Qtc
 
 class QControlPanel(Qtw.QWidget):
 
+    toggle = Qtc.pyqtSignal(str)
+
     def __init__(self):
         super().__init__()
 
@@ -14,14 +16,17 @@ class QControlPanel(Qtw.QWidget):
 
         # Radiobuttons for display type
         self.frame_display = Qtw.QFrame()
-        self.radiobutton_dens = Qtw.QRadioButton('Density')
-        self.radiobutton_dens.setChecked(True)
-        self.radiobutton_horz = Qtw.QRadioButton('Horizontal')
-        self.radiobutton_vert = Qtw.QRadioButton('Vertical')
+        self.rbtn_dens = Qtw.QRadioButton('Density')
+        self.rbtn_dens.toggled.connect(self.rbtn_toggled)
+        self.rbtn_horz = Qtw.QRadioButton('Horizontal')
+        self.rbtn_horz.toggled.connect(self.rbtn_toggled)
+        self.rbtn_vert = Qtw.QRadioButton('Vertical')
+        self.rbtn_vert.toggled.connect(self.rbtn_toggled)
+        self.rbtn_dens.setChecked(True)
         layout_display = Qtw.QVBoxLayout()
-        layout_display.addWidget(self.radiobutton_dens)
-        layout_display.addWidget(self.radiobutton_horz)
-        layout_display.addWidget(self.radiobutton_vert)
+        layout_display.addWidget(self.rbtn_dens)
+        layout_display.addWidget(self.rbtn_horz)
+        layout_display.addWidget(self.rbtn_vert)
         self.frame_display.setLayout(layout_display)
 
         # Spinboxes for airfoil design
@@ -58,6 +63,12 @@ class QControlPanel(Qtw.QWidget):
         layout.addWidget(self.frame_display)
         layout.addWidget(self.frame_airfoil)
         self.setLayout(layout)
+
+    def rbtn_toggled(self):
+        rbtn = self.sender()
+        if rbtn.isChecked():
+            # print(rbtn.text())
+            self.toggle.emit(rbtn.text())
 
 
 if __name__ == "__main__":

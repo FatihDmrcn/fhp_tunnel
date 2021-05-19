@@ -26,6 +26,8 @@ class FHP_Model(Qtc.QObject):
         self.__h = height
         self.__w = width
         self.__field_randomized = randomized
+        self.__display_as = 'Density'
+        self.__running = False
         self.__coordinates = []
         self.field = self.__init_field()
         if self.__field_randomized:
@@ -132,6 +134,19 @@ class FHP_Model(Qtc.QObject):
                 d = d.astype(np.long)
                 self.field[:6, c[0], c[1]] = d
 
+    def __get_flow_dir(self, dir='h'):
+        if dir == 'h':
+            array = 0.5*self.field[0, :, :] + self.field[1, :, :] + 0.5*self.field[2, :, :] - \
+                    0.5*self.field[3, :, :] - self.field[4, :, :] - 0.5*self.field[5, :, :]
+        if dir == 'v':
+            angle = np.sin(np.pi/3)
+            array = angle*self.field[0, :, :] - angle*self.field[2, :, :] - \
+                    angle*self.field[3, :, :] + angle*self.field[5, :, :]
+        return array
+
+    def __get_density(self):
+        return np.sum(self.field[:6, :, :], axis=0)
+
     def insert_object(self, arr):
         # Clean existing objects by setting walls to Zero
         self.field[6,4:-4,:] = 0
@@ -143,22 +158,20 @@ class FHP_Model(Qtc.QObject):
         # Re-Randomize Field
         self.__randomize_field()
 
-    def __get_flow_dir(self, dir='h'):
-        if dir == 'h':
-            array = 0.5*self.field[0, :, :] + self.field[1, :, :] + 0.5*self.field[2, :, :] - \
-                    0.5*self.field[3, :, :] - self.field[4, :, :] - 0.5*self.field[5, :, :]
-        if dir == 'v':
-            angle = np.sin(np.pi/3)
-            array = angle*self.field[0, :, :] - angle*self.field[2, :, :] - \
-                    angle*self.field[3, :, :] + angle*self.field[5, :, :]
-        return array
+    def setState(self, state):
+        self.__running = state
 
-    def __get_sum(self):
-        return np.sum(self.field[:6, :, :], axis=0)
+    @Qtc.pyqtSlot(str)
+    def setDisplayType(self, display_as):
+        self.__display_as = display_as
+        if not self.__running:
+            array = self.get_array()
+            self.time_step.emit(array)
 
     def get_array(self):
-        array = self.__get_flow_dir()
-        #array = self.__get_sum()
+        if self.__display_as == 'Horizontal': array = self.__get_flow_dir(dir='h')
+        if self.__display_as == 'Vertical': array = self.__get_flow_dir(dir='v')
+        if self.__display_as == 'Density': array = self.__get_density()
         for i in range(int(self.__h/4)):
             for j in range(int(self.__w/4)):
                 x, y = j*4, i*4
