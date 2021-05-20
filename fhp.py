@@ -10,7 +10,7 @@ import PyQt5.QtCore as Qtc
 
 class FHP_Model(Qtc.QObject):
 
-    field_emit = Qtc.pyqtSignal(np.ndarray)
+    field_emit = Qtc.pyqtSignal(np.ndarray, np.ndarray)
 
     vectors = {'4':[np.array([1,1,0,1,1,0]),
                     np.array([1,0,1,1,0,1]),
@@ -159,7 +159,8 @@ class FHP_Model(Qtc.QObject):
         # Re-Randomize Field
         self.__set_field()
         arr = self.get_array()
-        self.field_emit.emit(arr)
+        walls = self.field[6,:,:]
+        self.field_emit.emit(arr, walls)
 
     def setState(self, state):
         self.__running = state
@@ -169,23 +170,32 @@ class FHP_Model(Qtc.QObject):
         self.__display_as = display_as
         if not self.__running:
             arr = self.get_array()
-            self.field_emit.emit(arr)
+            walls = self.field[6,:,:]
+            self.field_emit.emit(arr, walls)
 
     def get_array(self):
-        if self.__display_as == 'Horizontal': arr = self.__get_flow_dir(dir='h')
-        if self.__display_as == 'Vertical': arr = self.__get_flow_dir(dir='v')
-        if self.__display_as == 'Density': arr = self.__get_density()
-        for i in range(int(self.__h/4)):
-            for j in range(int(self.__w/4)):
-                x, y = j*4, i*4
-                arr[y:(y + 4), x:(x + 4)] = np.mean(arr[y:(y + 4), x:(x + 4)]) * np.ones((4, 4), dtype=np.long)
+        if self.__display_as == 'Density':
+            arr = self.__get_density()
+        else:
+            if self.__display_as == 'Horizontal':
+                arr = self.__get_flow_dir(dir='h')
+            if self.__display_as == 'Vertical':
+                arr = self.__get_flow_dir(dir='v')
+            for i in range(int(self.__h/4)):
+                for j in range(int(self.__w/4)):
+                    x, y = j*4, i*4
+                    arr[y:(y + 4), x:(x + 4)] = np.mean(arr[y:(y + 4), x:(x + 4)]) * np.ones((4, 4), dtype=np.long)
         return arr
+
+    def get_walls(self):
+        return self.field[6,:,:]
 
     def do_step(self):
         self.__flux()
         self.__scatter()
         arr = self.get_array()
-        self.field_emit.emit(arr)
+        walls = self.field[6,:,:]
+        self.field_emit.emit(arr, walls)
 
     def run(self, t_steps=100):
         for t in range(t_steps):

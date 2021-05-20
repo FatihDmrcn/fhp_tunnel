@@ -26,14 +26,15 @@ class MainClassAsGUI(Qtw.QWidget):
         self.model.insert_object(self.airfoil.getAirfoil())
 
         # WIDGETS
-        self.canvas = QCanvas(self.model.get_array())
         self.control = QControlPanel()
+        self.canvas = QCanvas(self.model.get_array(), self.model.get_walls())
+        self.canvas.setFixedWidth(self.control.height()*3)
 
         # LAYOUT
         layout = Qtw.QGridLayout()
         layout.setAlignment(Qtc.Qt.AlignTop)
-        layout.addWidget(self.canvas, 0, 0)
-        layout.addWidget(self.control, 0, 1)
+        layout.addWidget(self.control, 0, 0)
+        layout.addWidget(self.canvas, 0, 1)
         self.setLayout(layout)
 
         # THREAD
@@ -74,7 +75,6 @@ class MainClassAsGUI(Qtw.QWidget):
             self.do_step()
         if not self.running:
             self.control.button_run_pause.setText('Run')
-            self.control.frame_airfoil.setEnabled(True)
 
 
 if __name__ == "__main__":
