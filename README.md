@@ -1,5 +1,13 @@
 # FHP Tunnel
 
+> **HINWEIS:**
+> Dieser zelluläre Automat zur fluiddynamischen Simulation der Umströmung von NACA-Profilen 
+> wurde im Rahmen einer Vorlesung erstellt.
+
+> **NOTE:**
+> This cellular automaton for fluid dynamic simulation of the flow around NACA profiles 
+> was created in the context of a lecture.
+
 
 ![gui](misc/gui.PNG "Screenshot of the GUI")
 
