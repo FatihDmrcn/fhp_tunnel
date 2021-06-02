@@ -1,11 +1,11 @@
 import PyQt5.QtWidgets as Qtw
 import PyQt5.QtCore as Qtc
 
-from gui_canvas import QCanvas
-from gui_thread import QThreadStep
-from gui_control import QControlPanel
-from fhp import FHP_Model
-from airfoil import Airfoil
+from .gui_canvas import QCanvas
+from .gui_thread import QThreadStep
+from .gui_control import QControlPanel
+from .fhp import FHP_Model
+from .airfoil import Airfoil
 
 
 class MainClassAsGUI(Qtw.QWidget):
