@@ -28,7 +28,7 @@ class QCanvas(FigureCanvas):
     def __sizing(self, w):
         w_inch = w / self.dpi
         h_inch = w / (self.aspect * self.dpi)
-        self.setFixedHeight(w/3)
+        self.setFixedHeight(int(w/3))
         self.fig.set_size_inches(w_inch, h_inch, forward=False)
 
     def resizeEvent(self, event):
